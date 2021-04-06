@@ -1,0 +1,27 @@
+{
+  "name": "studio02",
+  "version": "0.0.1",
+  "description": "An Educational WebGL library",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "npx tsc --project . --module es2015 --outDir ./dist",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "npx http-server ./ -o"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kamaninya/studio02.git"
+  },
+  "author": "kamaninya",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/kamaninya/studio02/issues"
+  },
+  "homepage": "https://github.com/kamaninya/studio02#readme",
+  "devDependencies": {
+    "http-server": "^0.9.0",
+    "typescript": "^3.6.2"
+  }
+}
