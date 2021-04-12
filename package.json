@@ -1,5 +1,5 @@
 {
-  "name": "studio02",
+  "name": "studio03",
   "version": "0.0.1",
   "description": "An Educational WebGL library",
   "main": "dist/index.js",
@@ -12,14 +12,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kamaninya/studio02.git"
+    "url": "git+https://github.com/kamaninya/studio03.git"
   },
   "author": "kamaninya",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/kamaninya/studio02/issues"
+    "url": "https://github.com/kamaninya/studio03/issues"
   },
-  "homepage": "https://github.com/kamaninya/studio02#readme",
+  "homepage": "https://github.com/kamaninya/studio03#readme",
   "devDependencies": {
     "http-server": "^0.9.0",
     "typescript": "^3.6.2"
