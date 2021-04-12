@@ -1,25 +1,8 @@
 // shader.ts
 import{ ShaderType, WebGLProgram } from "./definitions.js"; //definition.tsから届いたもの
 
+// const vertexShaderStr　～はmain.jsに引っ越し
 
-const vertexShaderStr = `
-precision highp float; // 浮動小数点の精度を「高精度」に指定します
-
-attribute vec3 a_position; // 頂点情報として「位置座標」を入力させます
-
-void main(void){
-    gl_Position = vec4(a_position, 1.0); // 位置座標をそのまま出力します
-}
-`;
-
-// フラグメント（ピクセル）シェーダーの内容
-const fragmentShaderStr = `
-precision highp float; // 浮動小数点の精度を「高精度」に指定します
-
-void main(void){
-    gl_FragColor = vec4(0.3, 0.35, 0.95, 1.0); // 赤い色で表示します
-}
-`;
 
 //--------------------------------------
 function compileShader(gl: WebGLRenderingContext, shaderType: ShaderType, shaderStr: string){
@@ -53,7 +36,8 @@ function compileShader(gl: WebGLRenderingContext, shaderType: ShaderType, shader
 }
 
 //--------------------------------------
-export function initProgram(gl: WebGLRenderingContext){
+// export function initProgram(gl: WebGLRenderingContext){ //変更前
+export function initProgram(gl: WebGLRenderingContext, vertexShaderStr: string, fragmentShaderStr: string) {
     // シェーダーコードをコンパイルして、頂点シェーダーとフラグメント（ピクセル）シェーダーを作成します。
     var vertexShader = compileShader(gl, ShaderType.Vertex, vertexShaderStr) as WebGLShader;
     var fragmentShader = compileShader(gl, ShaderType.Fragment, fragmentShaderStr) as WebGLShader;

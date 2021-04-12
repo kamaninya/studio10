@@ -5,8 +5,9 @@ import{ initBuffers } from "./buffer.js"; //buffer.tsから届いたもの
 import{ drawScene } from "./render.js"; //render.tsから届いたもの
 
 
-// export default function main(){ //変更前
-export default function main(vertices: number[], vertexComponentNumber: number){
+// export default function main(){ //変更前04
+// export default function main(vertices: number[], vertexComponentNumber: number){ //変更前05
+export default function main(vertices: number[], vertexComponentNumber: number, vertexShaderStr: string, fragmentShaderStr: string){
     const canvas = document.getElementById('world') as HTMLCanvasElement;
     const gl = initWebGL(canvas);
     
@@ -14,12 +15,13 @@ export default function main(vertices: number[], vertexComponentNumber: number){
         return false;
     }
     
-    const shaderProgram = initProgram(gl);
+    // const shaderProgram = initProgram(gl); //変更前05
+    const shaderProgram = initProgram(gl, vertexShaderStr, fragmentShaderStr);
     if(shaderProgram == null){
         return false;
     }
     
-    // const vertexBuffer = initBuffers(gl);　//変更前
+    // const vertexBuffer = initBuffers(gl);　//変更前04
     const vertexBuffer = initBuffers(gl, vertices, vertexComponentNumber);
     
     // カラーをクリアする際の色を指定します（黒に設定）
