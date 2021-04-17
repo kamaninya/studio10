@@ -1,5 +1,5 @@
 {
-  "name": "studio05",
+  "name": "studio06",
   "version": "0.0.1",
   "description": "An Educational WebGL library",
   "main": "dist/index.js",
@@ -12,14 +12,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kamaninya/studio05.git"
+    "url": "git+https://github.com/kamaninya/studio06.git"
   },
   "author": "kamaninya",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/kamaninya/studio05/issues"
+    "url": "https://github.com/kamaninya/studio06/issues"
   },
-  "homepage": "https://github.com/kamaninya/studio05#readme",
+  "homepage": "https://github.com/kamaninya/studio06#readme",
   "devDependencies": {
     "http-server": "^0.9.0",
     "typescript": "^3.6.2"

@@ -1,10 +1,17 @@
-// context.ts
-export function initWebGL(canvas: HTMLCanvasElement){
-    const gl = canvas.getContext('webgl') as WebGLRenderingContext;
+// context.ts。元context.tsのリネーム
+export default class Context{
+    private _gl: WebGLRenderingContext;
+    constructor(canvas: HTMLCanvasElement){
+        const gl = canvas.getContext('webgl') as WebGLRenderingContext;
+
+        if(gl == null){
+            alert('Failed to initialize WebGL.');
+        }
     
-    if(gl == null){
-        alert('Failed to initialize WebGL.');
+        this._gl = gl;
     }
     
-    return gl;
+    get gl(){
+        return this._gl;
+    }
 }
