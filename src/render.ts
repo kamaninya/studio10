@@ -1,3 +1,4 @@
+/*
 // render.ts
 import{ WebGLProgram, WebGLBuffer } from "./definitions.js"; //definition.tsから届いたもの
 
@@ -16,3 +17,4 @@ export function drawScene(gl: WebGLRenderingContext, vertexBuffer: WebGLBuffer, 
     // 現在設定している頂点データを使って、WebGLにポリゴンを描画させます（いわゆる「ドローコール」）
     gl.drawArrays(gl.TRIANGLES, 0, vertexBuffer._vertexNumber);
 }
+*/

@@ -1,4 +1,4 @@
-// context.ts。元context.tsのリネーム
+// Context.ts。元context.tsのリネーム
 export default class Context{
     private _gl: WebGLRenderingContext;
     constructor(canvas: HTMLCanvasElement){
