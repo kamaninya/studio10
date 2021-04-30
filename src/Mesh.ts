@@ -4,14 +4,13 @@ import Material from "./Material.js";
 import Context from "./Context.js";
 
 //--------------------------------------
-// 07での改造
-
+// R＆Dステージ08での変更。
 export type VertexAttributeSet = {
-    position: number[],
-    color?: number[],
-    normal?: number[],
-    texcoord?: number[],
-    indices?: number[]
+    position: number[] | Float32Array, // 通常配列なのでFloat32に変更。
+    color?: number[] | Float32Array, // 残り3つも同様
+    normal?: number[] | Float32Array,
+    texcoord?: number[] | Float32Array,
+    indices?: number[] | Uint16Array //これはUint16
 }
 
 
@@ -41,7 +40,10 @@ export default class Mesh{
         }
     }
     
-        private _setupVertexBuffer(_array: number[], defaultArray: number[]){
+    //--------------------
+    // WebGLのVertexBufferやIndexBufferを作成する関数は、配列が渡されることを想定していましたから、
+    // TypedArrayが渡されても対応できるように少し書き換えます。
+    private _setupVertexBuffer(_array: number[] | Float32Array, defaultArray: number[]){ //変更
         let array = _array;
         
         if(array == null){
@@ -57,22 +59,27 @@ export default class Mesh{
         const buffer = gl.createBuffer() as WebGLBuffer;
         // ↓バッファを有効化します
         gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-        // ↓位置座標データをバッファに登録します
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(array), gl.STATIC_DRAW);
+
+        // Float32追加
+        const typedArray = (array.constructor === Float32Array) ? array as Float32Array : new Float32Array(array);
+
+        // ↓位置座標データをバッファに登録します。ここも変更。すぐ上のtypedArrayでFloat32になっているのでこれに変える。
+        gl.bufferData(gl.ARRAY_BUFFER, typedArray, gl.STATIC_DRAW);
         
-        return buffer;
-        
+        return buffer;        
     }
     
     
-    private _setupIndexBuffer(indicesArray: number[]){
+    private _setupIndexBuffer(indicesArray: number[] | Uint16Array){ //変更
         const gl = this._context.gl;
         // ↓頂点属性用のバッファを作成します
         const buffer = gl.createBuffer() as WebGLBuffer;
         // ↓バッファを有効化します
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffer);
-        // ↓位置座標データをバッファに登録します
-        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indicesArray), gl.STATIC_DRAW);
+        // こっちはUint16追加
+        const typedArray = (indicesArray.constructor === Uint16Array) ? indicesArray as Uint16Array : new Uint16Array(indicesArray);
+        // ↓位置座標データをバッファに登録します。bufferData内の2つ目をtypedArrayへ…
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, typedArray, gl.STATIC_DRAW);
         return buffer;
     }
     

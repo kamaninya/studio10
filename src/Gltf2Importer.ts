@@ -1,15 +1,23 @@
 //Gltf2Importer.ts
 //import { Gltf2 } from "./glTF2.js"; //7面途中の記述。これも書かないとGltf2が無いと言われる。
+import Context from './Context.js';
 import { Gltf2Accessor, Gltf2BufferView, Gltf2 } from './glTF2.js'; //アクセサ、バッファビュー、Gltf2読み込み。
-import Mesh from "./Mesh.js"; //メッシュも必要。
+import Material from './Material.js';
+import Mesh, { VertexAttributeSet } from "./Mesh.js"; //メッシュも必要。
 
-
+/*
+8面での変更。Meshクラスを生成して頂点情報をセットし、呼び出し元にMeshを返すようにしてあげます。
+Meshインスタンスの生成にはContextとMaterialのインスタンスが必要です。
+これはimportメソッドの引数として呼び出し元から渡してあげることにしましょう。
+これで、glTFファイルから読み込んだメッシュに対して、ユーザーが好きな質感（シェーダー）を
+適用することができます。
+*/
 export default class Gltf2Importer {
     private static __instance: Gltf2Importer;
 
     private constructor(){}
 
-    async import(uri: string){
+    async import(uri: string, context: Context, material: Material){ //変更。
         let response: Response;
         try{
             response = await fetch(uri);
@@ -34,13 +42,14 @@ export default class Gltf2Importer {
         // private _loadBinで行われた作業の結果（取り出したbin）を受け取るの？
         const arrayBufferBin = await this._loadBin(json, uri);
 
-        // arrayBufferBinが宣言された後に入れないとエラーになる
-        this._loadMesh(arrayBufferBin, json);
+        // 8面にて変更。
+        const meshes = this._loadMesh(arrayBufferBin, json, context, material); 
 
 
         // これでbinの中身をコンソールの文字列で出せる…と？
-        console.log(arrayBufferBin);
+        //console.log(arrayBufferBin);
 
+        return meshes;
     }
     
 
@@ -75,7 +84,6 @@ export default class Gltf2Importer {
 
         console.log(json);
         }
-
     */
 
 
@@ -158,55 +166,98 @@ export default class Gltf2Importer {
         }
     }
 
-    private _loadMesh(arrayBufferBin: ArrayBuffer, json: Gltf2){
+    //8面での変更。
+    private _loadMesh(arrayBufferBin: ArrayBuffer, json: Gltf2, context: Context, material: Material){
         const meshes: Mesh[] = []
         // 全てのメッシュについてループします
         for (let mesh of json.meshes){
             // メッシュの0番目のプリミティブの情報を取得します。
             const primitive = mesh.primitives[0];
-
             // プリミティブの持つ頂点属性（アトリビュート）の中から位置座標に相当するAccsessor情報を取り出します。
             const attributes = primitive.attributes;
-            const positionAccessor = json.accessors[attributes.POSITION] as Gltf2Accessor;
 
+            const positionTypedArray = this.getAttribute(json, attributes.POSITION, arrayBufferBin);
+            let colorTypedArray: Float32Array;
+            if(attributes.COLOR_0){
+                colorTypedArray = this.getAttribute(json, attributes.COLOR_0, arrayBufferBin);
+            }
+
+            const vertexData: VertexAttributeSet = {
+                position: positionTypedArray,
+                color: colorTypedArray!
+            }
+            const libMesh = new Mesh(material, context, vertexData);
+            meshes.push(libMesh);
+
+
+            /*8面途中の変更前---------------------------------------
+            const positionAccessor = json.accessors[attributes.POSITION] as Gltf2Accessor;
             // 頂点座標のAccsessorが属しているBufferViewの情報を取り出します。
             const positionBufferView = json.bufferViews[positionAccessor.bufferView!] as Gltf2BufferView;
-
-
             // BufferViewの、自身が属するBufferの先頭からのメモリ位置（オフセット）を取得します
             const byteOffsetOfBufferView = positionBufferView.byteOffset!;
-
             // Accsessorの、自身が属するBufferViewの先頭からのメモリ位置（オフセット）を取得します
             const byteOffsetOfAccessor = positionAccessor.byteOffset!;
-
             // 両方を足すことで、Buffer(ArrayBuffer)先頭からのオフセットが求まります。
             const byteOffset = byteOffsetOfBufferView + byteOffsetOfAccessor;
 
-
             // 頂点属性のコンポーネントの型を取得します（16ビットの正整数か、32ビット正整数か、32ビット浮動小数点か）
             const positionComponentBytes = this._componentBytes(positionAccessor.componentType);
-
             // 頂点座標のコンポーネントの数を取得します（x,y,zなら３つ、x,y,z,wなら４つです）
             const positionComponentNum = this._componentNum(positionAccessor.type);
-
             // 頂点の数を取得します。↑のプリミティブ云々を参照。あそこから取る。
             const count = positionAccessor.count;
 
 
             // TypedArray(今回の場合はFloat32Array)の第３引数に与える、Float型数値の個数を求めます。
             const typedArrayComponentCount = positionComponentNum * count;
-
             // コンポーネントの型に合わせたTypedArray（Uint16Array/Uint32Array/Float32Array)のクラスオブジェクトを取得します
             const positionTypedArrayClass = this._componentTypedArray(positionAccessor.componentType);
 
-            // 動的に得た種類のTypedArrayを、頂点データ全体のArrayBufferのうち、指定したオフセットとデータ個数で一部を切り出す形で生成します。
-            const positionTypedArray = new positionTypedArrayClass(arrayBufferBin, byteOffset, typedArrayComponentCount);
+            // 動的に得た種類のTypedArrayを、頂点データ全体のArrayBufferのうち、
+            //指定したオフセットとデータ個数で一部を切り出す形で生成します。
+            //ここをFloat32へ変更
+            const positionTypedArray = new positionTypedArrayClass(arrayBufferBin, byteOffset, typedArrayComponentCount) as Float32Array;
+
+            //8面での変更、追加。--------
+            const vertexData: VertexAttributeSet = {
+                position: positionTypedArray
+            }
+
+            const libMesh = new Mesh(material, context, vertexData);
+            meshes.push(libMesh);
+            //------------------------------------------------------
+            */
 
 
             console.log(positionTypedArray);
         }
 
+        return meshes; //追加。
+
     }
+
+
+    //コメント部分にある定義してたものをここでまとめてしまおう
+    private getAttribute(json: Gltf2, attributeIndex: number, arrayBufferBin: ArrayBuffer){
+        const accessor = json.accessors[attributeIndex] as Gltf2Accessor;
+        const bufferView = json.bufferViews[accessor.bufferView!] as Gltf2BufferView;
+        const byteOffsetOfBufferView = bufferView.byteOffset!;
+        const byteOffsetOfAccessor = accessor.byteOffset!;
+        const byteOffset = byteOffsetOfBufferView + byteOffsetOfAccessor;
+
+        const componentBytes = this._componentBytes(accessor.componentType);
+        const componentNum = this._componentNum(accessor.type);
+        const count = accessor.count;
+
+        const typedArrayComponentCount = componentNum * count;
+        const typedArrayClass = this._componentTypedArray(accessor.componentType);
+        const typedArray = new typedArrayClass(arrayBufferBin, byteOffset, typedArrayComponentCount) as Float32Array;
+
+        return typedArray
+        
+    }
+    
     
 
     // このインスタンスの生成・取得方法については「シングルトンパターン」で調べてみてください。
