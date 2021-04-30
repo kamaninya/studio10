@@ -1,11 +1,13 @@
 // Material.ts。元shader.tsがリネームしたもの
 import{ ShaderType, WebGLProgram } from "./definitions.js"; //definition.tsから届いたもの
 import Context from "./Context.js";
+import Vector4 from "./Vector4.js"; //ステージ09での追加
 
 // const vertexShaderStr　～はmain.jsに引っ越し
 
 export default class Material{
     private _program: WebGLProgram;
+    private _baseColor = new Vector4(1,1,1,1); //ステージ09での追加
 
     
     constructor(context: Context, vertexShaderStr: string, fragmentShaderStr: string){
@@ -50,7 +52,10 @@ export default class Material{
         // attributeColorが入ってないので、attributePositionと同様に処理しよう
         shaderProgram._attributeColor = gl.getAttribLocation(shaderProgram, "a_color");
         gl.enableVertexAttribArray(shaderProgram._attributeColor);
-    
+
+        //ステージ09での追加
+        shaderProgram._uniformBaseColor = gl.getUniformLocation(shaderProgram, 'u_baseColor')!;
+
         this._program = shaderProgram;
 
     }
@@ -90,4 +95,23 @@ export default class Material{
         return this._program
     }
 
+
+    //ステージ09での追加始まり-----------------------------------------------
+    setUniformValues(gl: WebGLRenderingContext){
+        gl.uniform4fv(this._program._uniformBaseColor, this._baseColor.raw);
+    }
+
+    set baseColor(color: Vector4){
+        this._baseColor = color;
+    }
+    get baseColor(): Vector4{
+        return this._baseColor;
+    }
+
+    useProgram(gl: WebGLRenderingContext){
+        gl.useProgram(this._program);
+    }
+
+    //ステージ09での追加ここまで-----------------------------------------------
+    
 }

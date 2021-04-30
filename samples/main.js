@@ -4,6 +4,7 @@
 // 読み込んだglTFファイルのみを描画するように以下のように書き換えます。
 //import { VertexAttributeSet } from '../src/Mesh.js';
 import studioxx from '../dist/index.js';
+import Vector4 from '../dist/Vector4.js';
 //------------------
 // フラグメント（ピクセル）シェーダーの内容
 const vertexShaderStr = `
@@ -24,15 +25,17 @@ const fragmentShaderStr = `
 precision highp float;
 
 varying vec4 v_color;
+uniform vec4 u_baseColor; //ステージ09での追加
 
 void main(void){
-    gl_FragColor = v_color;
+    gl_FragColor = v_color * u_baseColor; //ステージ09で変更
 }
 `;
 async function main() {
     const canvas = document.getElementById('world');
     const context = new studioxx.Context(canvas);
     const material = new studioxx.Material(context, vertexShaderStr, fragmentShaderStr);
+    material.baseColor = new Vector4(1, 0, 0, 1); //ステージ09で追加
     const glTF2Importer = studioxx.Gltf2Importer.getInstance();
     const meshes = await glTF2Importer.import('../assets/gltf/BoxAnimated/glTF/BoxAnimated.gltf', context, material);
     const gl = context.gl;
