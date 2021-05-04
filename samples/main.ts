@@ -6,8 +6,9 @@
 import studioxx from '../dist/index.js';
 
 //赤に染めるnew Vector4()でインポート求められたましたが…いいのかな？
-import Vector4 from '../dist/Vector4.js';
+//import Vector4 from '../dist/Vector4.js';
 
+/*
 //------------------
 // フラグメント（ピクセル）シェーダーの内容
 const vertexShaderStr = `
@@ -35,16 +36,16 @@ void main(void){
     gl_FragColor = v_color * u_baseColor; //ステージ09で変更
 }
 `;
+*/
 
 async function main(){
 
     const canvas = document.getElementById('world') as HTMLCanvasElement;
     const context = new studioxx.Context(canvas);
-    const material = new studioxx.Material(context, vertexShaderStr, fragmentShaderStr);
-    material.baseColor = new Vector4(1, 0, 0, 1); //ステージ09で追加
+    //const material = new studioxx.Material(context, vertexShaderStr, fragmentShaderStr);
+    //material.baseColor = new Vector4(1, 0, 0, 1); //ステージ09で追加
     const glTF2Importer = studioxx.Gltf2Importer.getInstance();
-
-    const meshes = await glTF2Importer.import('../assets/gltf/BoxAnimated/glTF/BoxAnimated.gltf', context, material);
+    const meshes = await glTF2Importer.import('../assets/gltf/BoxAnimated/glTF/BoxAnimated.gltf', context);
 
     const gl = context.gl;
     // カラーをクリアする際の色指定します（黒に設定）
@@ -62,80 +63,3 @@ async function main(){
 
 main();
 
-/*
-//-------------------------------------
-//07面よりglTF2Importer追加
-const glTF2Importer = studioxx.Gltf2Importer.getInstance();
-glTF2Importer.import('../assets/gltf/BoxAnimated/glTF/BoxAnimated.gltf');
-
-
-//------------------
-// フラグメント（ピクセル）シェーダーの内容
-const vertexShaderStr = `
-precision highp float; // 浮動小数点の精度を「高精度」に指定します
-
-attribute vec3 a_position;
-attribute vec4 a_color;
-varying vec4 v_color;
-
-void main(void){
-    gl_Position = vec4(a_position, 1.0); // 
-    v_color = a_color; //
-}
-`;
-
-//------------------
-// フラグメント（ピクセル）シェーダーの内容
-const fragmentShaderStr = `
-precision highp float; // 浮動小数点の精度を～
-
-varying vec4 v_color;
-
-void main(void){
-    gl_FragColor = v_color; // Meshから届いた色 
-}
-`;
-
-
-//三角形描く座標
-const vertexData: VertexAttributeSet = {
-    position: [
-         0.0, -1.0,  0.0,
-         1.0,  1.0,  0.0,
-        -1.0,  1.0,  0.0
-    ],
-    color: [
-         1.0,  0.0,  0.0, 1.0,
-         0.0,  1.0,  0.0, 1.0,
-         0.0,  0.0,  1.0, 1.0
-    ],
-    indices: [
-        0, 1, 2
-    ]
-}
-
-//--------------------------------------
-//ここからがstudio06での変更部分--------
-const vertexComponentNumber = 3; // この変数が使われてない？迷子？
-
-const canvas = document.getElementById('world') as HTMLCanvasElement;
-const context = new studioxx.Context(canvas);
-
-// Material.tsから
-const material = new studioxx.Material(context, vertexShaderStr, fragmentShaderStr);
-// Mesh.tsから
-const mesh = new studioxx.Mesh(material, context, vertexData);
-
-const gl = context.gl;
-// カラーをクリアする際の色を指定します（黒に設定）
-gl.clearColor(0.0, 0.0, 0.0, 1.0);
-
-// 深度テストを有効化します
-gl.enable(gl.DEPTH_TEST);
-
-// canvasのカラーと深度をクリアします
-gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-
-mesh.draw();
-*/

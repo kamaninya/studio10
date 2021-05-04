@@ -2,8 +2,10 @@
 //import { Gltf2 } from "./glTF2.js"; //7面途中の記述。これも書かないとGltf2が無いと言われる。
 import Context from './Context.js';
 import { Gltf2Accessor, Gltf2BufferView, Gltf2 } from './glTF2.js'; //アクセサ、バッファビュー、Gltf2読み込み。
+//import { Gltf2Accessor, Gltf2BufferView, Gltf2, Gltf2Attribute } from './glTF2.js'; //アクセサ、バッファビュー、Gltf2読み込み。
 import Material from './Material.js';
-import Mesh, { VertexAttributeSet } from "./Mesh.js"; //メッシュも必要。
+import Mesh, { VertexAttributeSet } from './Mesh.js'; //メッシュも必要。
+import Vector4 from './Vector4.js'; //ステージ09で追加
 
 /*
 8面での変更。Meshクラスを生成して頂点情報をセットし、呼び出し元にMeshを返すようにしてあげます。
@@ -15,9 +17,37 @@ Meshインスタンスの生成にはContextとMaterialのインスタンスが�
 export default class Gltf2Importer {
     private static __instance: Gltf2Importer;
 
+    // ステージ09で追加開始↓↓↓↓↓↓↓↓↓↓↓↓---------------------------------------
+    private static readonly vertexShaderStr = `
+    precision highp float;
+
+    attribute vec3 a_position;
+    attribute vec4 a_color;
+    varying vec4 v_color;
+
+    void main (void){
+        gl_Position = vec4(a_position, 1.0);
+        v_color = a_color;
+    }
+    `;
+
+    private static readonly fragmentShaderStr = `
+    precision highp float;
+    
+    varying vec4 v_color;
+    uniform vec4 u_baseColor;
+
+    void main (void){
+        gl_FragColor = v_color * u_baseColor;
+    }
+    `;
+    // ステージ09で追加終了↑↑↑↑↑↑↑↑↑↑↑↑---------------------------------------
+
     private constructor(){}
 
-    async import(uri: string, context: Context, material: Material){ //変更。
+
+    // async import(uri: string, context: Context, material: Material){ //変更。
+    async import(uri: string, context: Context){ //変更。
         let response: Response;
         try{
             response = await fetch(uri);
@@ -39,11 +69,11 @@ export default class Gltf2Importer {
         
         // this._loadFromArrayBuffer(arrayBuffer); //ここはまだ待機中
         
-        // private _loadBinで行われた作業の結果（取り出したbin）を受け取るの？
+        // private _loadBinで行われた作業の結果（取り出したbin）を代入
         const arrayBufferBin = await this._loadBin(json, uri);
 
-        // 8面にて変更。
-        const meshes = this._loadMesh(arrayBufferBin, json, context, material); 
+        // 8面にて変更。メッシュ関数受け取り
+        const meshes = this._loadMesh(arrayBufferBin, json, context); 
 
 
         // これでbinの中身をコンソールの文字列で出せる…と？
@@ -87,7 +117,7 @@ export default class Gltf2Importer {
     */
 
 
-    // .binを読み込むらしい
+    // .binを読み込む
     private async _loadBin(json: Gltf2, uri: string){
 
         // Gltf2Impoert.import()メソッドに渡されたgltfファイルのURIから、
@@ -110,7 +140,6 @@ export default class Gltf2Importer {
 
         //console.log(arrayBufferBin);
 
-        // 戻り値があるからconsole無しでも警告が出ない！
         return arrayBufferBin;
     }
 
@@ -141,7 +170,7 @@ export default class Gltf2Importer {
             case 5126: //FLOAT
                 return Float32Array;
             default:
-                console.error('Unsupported ComponentTypedArray.')
+                console.error('Unsupported ComponentTypedArray.');
                 return Uint8Array;
         }
     }
@@ -166,8 +195,33 @@ export default class Gltf2Importer {
         }
     }
 
+
+    // ステージ09で追加開始↓↓↓↓↓↓↓↓↓↓↓↓---------------------------------------
+    private _loadMaterial(json: Gltf2, materialIndex: number, context: Context){
+        const material = new Material(context, Gltf2Importer.vertexShaderStr, Gltf2Importer.fragmentShaderStr);
+
+        if(materialIndex >= 0){
+            const materialJson = json.materials[materialIndex];
+
+            let baseColor = new Vector4(1, 1, 1, 1);
+            if(materialJson.pbrMetallicRoughness != null){
+                if(materialJson.pbrMetallicRoughness.baseColorFactor != null){
+
+                    const baseColorArray = materialJson.pbrMetallicRoughness.baseColorFactor;
+                    baseColor = new Vector4(baseColorArray[0], baseColorArray[1], baseColorArray[2], baseColorArray[3]);
+                }
+            }
+
+            material.baseColor = baseColor;
+        }
+
+        return material;
+    }
+    // ステージ09で追加終了↑↑↑↑↑↑↑↑↑↑↑↑---------------------------------------
+
+
     //8面での変更。
-    private _loadMesh(arrayBufferBin: ArrayBuffer, json: Gltf2, context: Context, material: Material){
+    private _loadMesh(arrayBufferBin: ArrayBuffer, json: Gltf2, context: Context){
         const meshes: Mesh[] = []
         // 全てのメッシュについてループします
         for (let mesh of json.meshes){
@@ -175,6 +229,15 @@ export default class Gltf2Importer {
             const primitive = mesh.primitives[0];
             // プリミティブの持つ頂点属性（アトリビュート）の中から位置座標に相当するAccsessor情報を取り出します。
             const attributes = primitive.attributes;
+
+            // ステージ09で追加開始↓↓↓↓↓↓↓↓↓↓↓↓---------------------------------------
+            let materialIndex = -1;
+            if(primitive.material != null){
+                materialIndex = primitive.material;
+            }
+            const material = this._loadMaterial(json, materialIndex, context);
+            // ステージ09で追加終了↑↑↑↑↑↑↑↑↑↑↑↑---------------------------------------
+
 
             const positionTypedArray = this.getAttribute(json, attributes.POSITION, arrayBufferBin);
             let colorTypedArray: Float32Array;
@@ -230,7 +293,7 @@ export default class Gltf2Importer {
             */
 
 
-            console.log(positionTypedArray);
+            //console.log(positionTypedArray);
         }
 
         return meshes; //追加。
@@ -238,7 +301,7 @@ export default class Gltf2Importer {
     }
 
 
-    //コメント部分にある定義してたものをここでまとめてしまおう
+    //コメント部分にある定義してたものをここでまとめる
     private getAttribute(json: Gltf2, attributeIndex: number, arrayBufferBin: ArrayBuffer){
         const accessor = json.accessors[attributeIndex] as Gltf2Accessor;
         const bufferView = json.bufferViews[accessor.bufferView!] as Gltf2BufferView;
@@ -268,7 +331,5 @@ export default class Gltf2Importer {
 
         return this.__instance;
     }
-
-
 
 }

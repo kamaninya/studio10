@@ -96,7 +96,8 @@ export type Gltf2PbrMetallicRoughness = {
 }
 
 export type Gltf2Material = {
-    pbrMetalliRoughness?: Object,
+    //（ステージ09変更）pbr～ness?のObjectをGltf2PbrMetallicRoughnessに変えよう 
+    pbrMetallicRoughness?: Gltf2PbrMetallicRoughness,
     normalTexture?: Gltf2NormalTextureInfo,
     occlusionTexture?: Gltf2OcclusionTextureInfo,
     emissiveTexture?: Gltf2TextureInfo,
